@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useRef, useEffect } from "react";
+import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2 } from "lucide-react";
@@ -15,12 +15,41 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus on mount
-  useEffect(() => {
-    if (!disabled) {
-      inputRef.current?.focus();
+  // Function to focus the input
+  const focusInput = useCallback(() => {
+    if (!disabled && inputRef.current) {
+      // Use setTimeout to ensure focus happens after any DOM updates
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   }, [disabled]);
+
+  // Auto-focus on mount and when disabled changes
+  useEffect(() => {
+    focusInput();
+  }, [focusInput]);
+
+  // Re-focus when submitting ends
+  useEffect(() => {
+    if (!isSubmitting) {
+      focusInput();
+    }
+  }, [isSubmitting, focusInput]);
+
+  // Handle blur - restore focus after a short delay
+  // This handles cases where toasts/modals steal focus
+  const handleBlur = useCallback(() => {
+    if (!disabled && !isSubmitting) {
+      // Small delay to allow intentional clicks elsewhere
+      setTimeout(() => {
+        // Only re-focus if nothing else is focused or if body is focused
+        if (document.activeElement === document.body || !document.activeElement) {
+          inputRef.current?.focus();
+        }
+      }, 100);
+    }
+  }, [disabled, isSubmitting]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,8 +63,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
       setWord("");
     } finally {
       setIsSubmitting(false);
-      // Keep focus on input after submit
-      inputRef.current?.focus();
+      // Focus is handled by the useEffect above
     }
   };
 
@@ -47,6 +75,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
         placeholder="Digite sua palavra..."
         value={word}
         onChange={(e) => setWord(e.target.value)}
+        onBlur={handleBlur}
         disabled={disabled || isSubmitting}
         className="h-14 text-lg flex-1 bg-background/50 font-medium"
         autoComplete="off"
