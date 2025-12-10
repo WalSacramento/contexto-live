@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Beaker, BookOpen, MessageSquareHeart, Sparkles, ExternalLink } from "lucide-react";
 
 const STORAGE_KEY = "contexto-welcome-seen";
-const WORD_COUNT = 487; // Approximate number of words in seed
+const WORD_COUNT = 2000; // Approximate number of words in seed (expanded edition)
 
 interface WelcomeModalProps {
   feedbackUrl?: string;
