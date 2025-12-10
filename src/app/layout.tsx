@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen bg-gradient-to-br from-background via-background to-muted/30`}
       >
         <Providers>
-          {children}
+        {children}
         </Providers>
       </body>
     </html>

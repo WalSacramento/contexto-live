@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2 } from "lucide-react";
@@ -13,6 +13,14 @@ interface GuessInputProps {
 export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
   const [word, setWord] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    if (!disabled) {
+      inputRef.current?.focus();
+    }
+  }, [disabled]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -26,12 +34,15 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
       setWord("");
     } finally {
       setIsSubmitting(false);
+      // Keep focus on input after submit
+      inputRef.current?.focus();
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <Input
+        ref={inputRef}
         type="text"
         placeholder="Digite sua palavra..."
         value={word}
@@ -42,6 +53,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck="false"
+        autoFocus
       />
       <Button
         type="submit"
@@ -58,4 +70,3 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
     </form>
   );
 }
-

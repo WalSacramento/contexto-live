@@ -11,10 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Beaker, BookOpen, MessageSquareHeart, Sparkles, ExternalLink } from "lucide-react";
+import { Beaker, BookOpen, MessageSquareHeart, Sparkles, ExternalLink, Target, Globe } from "lucide-react";
 
-const STORAGE_KEY = "contexto-welcome-seen";
-const WORD_COUNT = 2000; // Approximate number of words in seed (expanded edition)
+const STORAGE_KEY = "contexto-welcome-seen-v2";
 
 interface WelcomeModalProps {
   feedbackUrl?: string;
@@ -56,7 +55,7 @@ export function WelcomeModal({ feedbackUrl }: WelcomeModalProps) {
             <Sparkles className="w-5 h-5 text-chart-1" />
           </DialogTitle>
           <DialogDescription className="text-base">
-            Esta é uma <span className="font-semibold text-foreground">Prova de Conceito (PoC)</span> do jogo
+            Versão multiplayer do jogo Contexto
           </DialogDescription>
         </DialogHeader>
 
@@ -68,30 +67,47 @@ export function WelcomeModal({ feedbackUrl }: WelcomeModalProps) {
               O que é isso?
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              O Contexto Live é um jogo multiplayer onde você tenta descobrir uma palavra secreta
-              através de palpites. Cada palpite recebe um ranking baseado na{" "}
-              <span className="text-foreground font-medium">proximidade semântica</span> com a palavra alvo.
+              Descubra a palavra secreta através de palpites! Cada palpite recebe um ranking 
+              baseado na <span className="text-foreground font-medium">proximidade semântica</span> com a palavra alvo.
+              Quanto menor o número, mais perto você está!
             </p>
           </div>
 
-          {/* PoC Info */}
-          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 space-y-3">
+          {/* Game Modes */}
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Dois Modos de Jogo
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="outline" className="gap-1 bg-primary/10">
+                  <Target className="w-3 h-3" />
+                  Clássico
+                </Badge>
+                <span className="text-muted-foreground">~2.000 palavras (servidor próprio)</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="outline" className="gap-1 bg-chart-1/10 text-chart-1 border-chart-1/30">
+                  <Globe className="w-3 h-3" />
+                  Contexto.me
+                </Badge>
+                <span className="text-muted-foreground">~50.000 palavras (API externa)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Multiplayer rules */}
+          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 space-y-2">
             <h4 className="font-semibold flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
               <Beaker className="w-4 h-4" />
-              Limitações da PoC
+              Regras Multiplayer
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Palavras no dicionário:</span>
-                <Badge variant="secondary" className="font-mono">
-                  ~{WORD_COUNT} palavras
-                </Badge>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                O dicionário contém palavras comuns em português brasileiro. 
-                Algumas palavras podem não ser reconhecidas.
-              </p>
-            </div>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>👀 Você vê os rankings dos oponentes, mas não as palavras</li>
+              <li>⚔️ Se dois jogadores chutarem a mesma palavra, ela é revelada!</li>
+              <li>🏆 Ganha quem descobrir a palavra primeiro (rank #1)</li>
+            </ul>
           </div>
 
           {/* Feedback request */}
@@ -101,8 +117,7 @@ export function WelcomeModal({ feedbackUrl }: WelcomeModalProps) {
               Seu feedback é importante!
             </h4>
             <p className="text-sm text-muted-foreground">
-              Estamos validando a mecânica do jogo. Conte-nos o que achou, 
-              bugs encontrados e sugestões de melhorias.
+              Estamos validando a mecânica multiplayer. Conte-nos o que achou!
             </p>
           </div>
         </div>
@@ -124,4 +139,3 @@ export function WelcomeModal({ feedbackUrl }: WelcomeModalProps) {
     </Dialog>
   );
 }
-

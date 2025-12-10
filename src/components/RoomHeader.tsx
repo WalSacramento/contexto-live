@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Room, RoomPlayer } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Copy, Play, Users, Clock, Trophy, Check } from "lucide-react";
+import { Copy, Play, Users, Clock, Trophy, Check, Target, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -70,15 +70,38 @@ export function RoomHeader({
     },
   };
 
+  const gameModeConfig = {
+    classic: {
+      label: "Clássico",
+      icon: Target,
+      color: "bg-primary/20 text-primary",
+    },
+    contexto: {
+      label: "Contexto.me",
+      icon: Globe,
+      color: "bg-chart-1/20 text-chart-1",
+    },
+  };
+
   const status = statusConfig[room.status];
   const StatusIcon = status.icon;
+  
+  const gameMode = gameModeConfig[room.game_mode || "classic"];
+  const GameModeIcon = gameMode.icon;
 
   return (
     <div className={cn("space-y-4", className)}>
       {/* Top bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Room info */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Game mode badge */}
+          <Badge variant="outline" className={cn("gap-1.5", gameMode.color)}>
+            <GameModeIcon className="w-3 h-3" />
+            {gameMode.label}
+          </Badge>
+
+          {/* Status badge */}
           <Badge variant="outline" className={cn("gap-1.5", status.color)}>
             <StatusIcon className="w-3 h-3" />
             {status.label}
@@ -155,4 +178,3 @@ export function RoomHeader({
     </div>
   );
 }
-

@@ -24,11 +24,26 @@ interface PlayerRanking {
 }
 
 export function RoomFeed({ guesses, currentUserId, winner, secretWord, className }: RoomFeedProps) {
-  // Sort by time (newest FIRST - reversed order)
+  // Sort by time (newest FIRST), but bump recently revealed collisions to top
   const sortedGuesses = useMemo(() => {
-    return [...guesses].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    const now = Date.now();
+    const COLLISION_HIGHLIGHT_DURATION = 10000; // 10 seconds to stay on top
+
+    return [...guesses].sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      
+      // Check if collision is recent (within highlight duration)
+      const aIsRecentCollision = a.is_revealed && (now - timeA) < COLLISION_HIGHLIGHT_DURATION;
+      const bIsRecentCollision = b.is_revealed && (now - timeB) < COLLISION_HIGHLIGHT_DURATION;
+
+      // Recent collisions go to top
+      if (aIsRecentCollision && !bIsRecentCollision) return -1;
+      if (!aIsRecentCollision && bIsRecentCollision) return 1;
+
+      // Otherwise, sort by time (newest first)
+      return timeB - timeA;
+    });
   }, [guesses]);
 
   // Calculate player rankings (best rank per player)
@@ -68,6 +83,14 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
       default:
         return <span className="w-4 text-center text-xs text-muted-foreground">{position + 1}</span>;
     }
+  };
+
+  // Check if a guess is a recent collision (for highlighting)
+  const isRecentCollision = (guess: GuessWithPlayer) => {
+    if (!guess.is_revealed) return false;
+    const now = Date.now();
+    const guessTime = new Date(guess.created_at).getTime();
+    return (now - guessTime) < 10000; // 10 seconds
   };
 
   return (
@@ -162,19 +185,35 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
           const showWord = isMe || guess.is_revealed;
           const tier = getRankTier(guess.rank);
           const isHot = tier === "hot" || tier === "winner";
+          const recentCollision = isRecentCollision(guess);
           
           return (
             <div
               key={guess.id}
               className={cn(
-                "p-3 rounded-lg border border-border/30 transition-all",
+                "p-3 rounded-lg border transition-all",
                 index === 0 && "animate-slide-in",
-                isMe && "bg-primary/5 border-primary/20"
+                // Default styles
+                "border-border/30",
+                // My guesses
+                isMe && "bg-primary/5 border-primary/20",
+                // Revealed (collision) - subtle highlight
+                guess.is_revealed && !recentCollision && "border-chart-1/20 bg-chart-1/5",
+                // Recent collision - strong highlight
+                recentCollision && "border-2 border-chart-1/50 bg-chart-1/15 shadow-lg shadow-chart-1/10"
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
+                    {/* Collision indicator for recent collisions */}
+                    {recentCollision && (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-chart-1 bg-chart-1/20 px-1.5 py-0.5 rounded">
+                        <Swords className="w-3 h-3" />
+                        COLISÃO!
+                      </span>
+                    )}
+                    
                     {/* Player indicator */}
                     <span className={cn(
                       "text-sm font-medium truncate",
@@ -183,12 +222,12 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                       {isMe ? "Você" : guess.nickname}
                     </span>
                     
-                    {/* Revealed/Hidden indicator */}
-                    {!isMe && (
+                    {/* Revealed/Hidden indicator (only for non-recent collisions) */}
+                    {!isMe && !recentCollision && (
                       guess.is_revealed ? (
                         <span className="flex items-center gap-1 text-xs text-chart-1">
                           <Swords className="w-3 h-3" />
-                          colisão!
+                          colisão
                         </span>
                       ) : (
                         <EyeOff className="w-3 h-3 text-muted-foreground/50" />
@@ -199,7 +238,13 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                   {/* Word or masked */}
                   <div className="flex items-center gap-2">
                     {showWord ? (
-                      <span className="font-medium capitalize">{guess.word}</span>
+                      <span className={cn(
+                        "font-medium capitalize",
+                        recentCollision && "text-lg font-bold text-chart-1",
+                        guess.is_revealed && !recentCollision && "text-chart-1"
+                      )}>
+                        {guess.word}
+                      </span>
                     ) : (
                       <span className="font-mono text-muted-foreground tracking-wider">
                         {maskWord(guess.word)}
@@ -207,7 +252,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                     )}
                     
                     {/* Hot indicator for close guesses */}
-                    {!isMe && isHot && (
+                    {!isMe && isHot && !guess.is_revealed && (
                       <span className="text-sm">
                         {getRankEmoji(guess.rank)} 
                         <span className="text-xs text-muted-foreground ml-1">

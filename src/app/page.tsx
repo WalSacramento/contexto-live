@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePlayer } from "./providers";
 import { getSupabase } from "@/lib/supabase";
-import { CreateRoomResponse, JoinRoomResponse } from "@/lib/types";
+import { CreateRoomResponse, JoinRoomResponse, GameMode } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from "sonner";
 import { Sparkles, Users, Zap } from "lucide-react";
 import { WelcomeModal } from "@/components/WelcomeModal";
+import { GameModeSelector } from "@/components/GameModeSelector";
 
 export default function LobbyPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function LobbyPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
 
   if (!isReady) {
     return (
@@ -30,12 +32,15 @@ export default function LobbyPage() {
     );
   }
 
-  const handleCreateRoom = async () => {
+  const handleOpenModeSelector = () => {
     if (!nicknameInput.trim()) {
       toast.error("Digite um nickname para continuar");
       return;
     }
+    setModeDialogOpen(true);
+  };
 
+  const handleCreateRoom = async (gameMode: GameMode) => {
     setNickname(nicknameInput.trim());
     setIsCreating(true);
 
@@ -46,6 +51,7 @@ export default function LobbyPage() {
       const { data, error } = await supabase.rpc("create_room", {
         p_user_id: playerId,
         p_nickname: nicknameInput.trim(),
+        p_game_mode: gameMode,
       });
 
       if (error) throw error;
@@ -58,6 +64,7 @@ export default function LobbyPage() {
 
       if (response.room_id) {
         toast.success("Sala criada com sucesso!");
+        setModeDialogOpen(false);
         router.push(`/room/${response.room_id}`);
       }
     } catch (error) {
@@ -116,6 +123,14 @@ export default function LobbyPage() {
       {/* Welcome Modal (PoC info) */}
       <WelcomeModal />
 
+      {/* Game Mode Selector Modal */}
+      <GameModeSelector
+        open={modeDialogOpen}
+        onOpenChange={setModeDialogOpen}
+        onSelect={handleCreateRoom}
+        isLoading={isCreating}
+      />
+
       {/* Background decoration */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -163,7 +178,7 @@ export default function LobbyPage() {
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
               <Button
-                onClick={handleCreateRoom}
+                onClick={handleOpenModeSelector}
                 disabled={isCreating || !nicknameInput.trim()}
                 className="h-14 text-base font-semibold"
                 size="lg"

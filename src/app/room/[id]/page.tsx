@@ -8,6 +8,7 @@ import { GuessInput } from "@/components/GuessInput";
 import { MyGuesses } from "@/components/MyGuesses";
 import { RoomFeed } from "@/components/RoomFeed";
 import { RoomHeader } from "@/components/RoomHeader";
+import { GameEndStats } from "@/components/GameEndStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Target, MessageSquare } from "lucide-react";
@@ -86,6 +87,9 @@ export default function RoomPage() {
   // Get secret word (only available when game is finished)
   const secretWord = room.status === "finished" ? room.secret_word : null;
 
+  // Game finished - show stats
+  const isGameFinished = room.status === "finished" && winner && secretWord;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Background decoration */}
@@ -110,19 +114,32 @@ export default function RoomPage() {
             </div>
           </div>
           
-          <RoomHeader
-            room={room}
-            players={players}
-            bestRank={bestRank}
-            isHost={isHost}
-            onStartGame={startGame}
-          />
+          {!isGameFinished && (
+            <RoomHeader
+              room={room}
+              players={players}
+              bestRank={bestRank}
+              isHost={isHost}
+              onStartGame={startGame}
+            />
+          )}
         </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
-        {room.status === "waiting" ? (
+        {/* Game Finished - Show Stats */}
+        {isGameFinished ? (
+          <div className="max-w-3xl mx-auto">
+            <GameEndStats
+              winner={winner}
+              secretWord={secretWord}
+              guesses={guesses}
+              players={players}
+              currentUserId={player?.id || ""}
+            />
+          </div>
+        ) : room.status === "waiting" ? (
           // Waiting room
           <div className="flex items-center justify-center h-[60vh]">
             <Card className="max-w-md w-full text-center">
@@ -197,4 +214,3 @@ export default function RoomPage() {
     </div>
   );
 }
-

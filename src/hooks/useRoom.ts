@@ -5,6 +5,7 @@ import { getSupabase } from "@/lib/supabase";
 import { Room, RoomPlayer, GuessWithPlayer, SubmitGuessResponse, StartGameResponse } from "@/lib/types";
 import { toast } from "sonner";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { fetchContextoRank } from "./useContextoAPI";
 
 interface RoomState {
   room: Room | null;
@@ -141,7 +142,7 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
           // Show toast for other players' guesses
           if (newGuess.user_id !== userId) {
-            if (newGuess.rank === 1) {
+            if (newGuess.rank === 1 || newGuess.rank === 0) {
               toast.success(`${guessWithNickname.nickname} venceu!`);
             } else if (newGuess.rank <= 10) {
               toast.info(`${guessWithNickname.nickname} está muito quente! (#${newGuess.rank})`);
@@ -267,39 +268,78 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
     };
   }, [roomId, userId, fetchRoomDetails]);
 
-  // Submit a guess
+  // Submit a guess - handles both modes
   const submitGuess = useCallback(async (word: string): Promise<SubmitGuessResponse | null> => {
     const supabase = getSupabase();
+    const gameMode = state.room?.game_mode || "classic";
+    const gameDay = state.room?.game_day;
 
     try {
-      const { data, error } = await supabase.rpc("submit_guess", {
-        p_room_id: roomId,
-        p_user_id: userId,
-        p_word: word,
-      });
+      if (gameMode === "contexto" && gameDay) {
+        // Contexto.me mode: fetch rank from external API, then save
+        const result = await fetchContextoRank(gameDay, word);
 
-      if (error) throw error;
+        if (!result.success || result.rank === undefined) {
+          toast.error(result.error || "Erro ao buscar palavra");
+          return null;
+        }
 
-      const response = data as SubmitGuessResponse;
-      
-      if (response.error) {
-        toast.error(response.error);
-        return null;
+        // Save the guess with the rank from Contexto.me API
+        const { data, error } = await supabase.rpc("save_guess", {
+          p_room_id: roomId,
+          p_user_id: userId,
+          p_word: word,
+          p_rank: result.rank,
+        });
+
+        if (error) throw error;
+
+        const response = data as SubmitGuessResponse;
+        
+        if (response.error) {
+          toast.error(response.error);
+          return null;
+        }
+
+        if (response.is_winner) {
+          toast.success("🏆 Você venceu! Parabéns!");
+        } else if (response.revealed) {
+          toast.info("⚔️ Colisão! A palavra foi revelada para todos.");
+        }
+
+        return response;
+
+      } else {
+        // Classic mode: use existing RPC
+        const { data, error } = await supabase.rpc("submit_guess", {
+          p_room_id: roomId,
+          p_user_id: userId,
+          p_word: word,
+        });
+
+        if (error) throw error;
+
+        const response = data as SubmitGuessResponse;
+        
+        if (response.error) {
+          toast.error(response.error);
+          return null;
+        }
+
+        if (response.is_winner) {
+          toast.success("🏆 Você venceu! Parabéns!");
+        } else if (response.revealed) {
+          toast.info("⚔️ Colisão! A palavra foi revelada para todos.");
+        }
+
+        return response;
       }
-
-      if (response.is_winner) {
-        toast.success("🏆 Você venceu! Parabéns!");
-      } else if (response.revealed) {
-        toast.info("⚔️ Colisão! A palavra foi revelada para todos.");
-      }
-
-      return response;
     } catch (err) {
       console.error("Error submitting guess:", err);
       toast.error("Erro ao enviar palpite");
       return null;
     }
-  }, [roomId, userId]);
+  }, [roomId, userId, state.room?.game_mode, state.room?.game_day]);
 
   // Start the game
   const startGame = useCallback(async (): Promise<boolean> => {

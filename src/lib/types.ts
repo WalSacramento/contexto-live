@@ -1,3 +1,6 @@
+// Game Modes
+export type GameMode = "classic" | "contexto";
+
 // Database Types
 export interface Dictionary {
   id: number;
@@ -11,7 +14,9 @@ export interface Room {
   status: "waiting" | "playing" | "finished";
   created_at: string;
   winner_id?: string | null;
-  secret_word?: string | null; // Only available when game is finished
+  secret_word?: string | null; // Only available when game is finished (classic mode)
+  game_mode: GameMode;
+  game_day?: number | null; // Only used in contexto mode
 }
 
 export interface RoomPlayer {
@@ -61,6 +66,7 @@ export interface JoinRoomResponse {
 export interface StartGameResponse {
   success?: boolean;
   error?: string;
+  game_mode?: GameMode;
 }
 
 // Player Context
@@ -69,3 +75,10 @@ export interface Player {
   nickname: string;
 }
 
+// Contexto.me API Response
+export interface ContextoAPIResponse {
+  distance?: number;
+  lemma?: string;
+  word?: string;
+  error?: string;
+}
