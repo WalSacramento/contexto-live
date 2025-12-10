@@ -2,8 +2,6 @@
 
 import { ContextoAPIResponse } from "@/lib/types";
 
-const CONTEXTO_API_BASE = "https://api.contexto.me/machado/pt-br/game";
-
 interface FetchRankResult {
   success: boolean;
   rank?: number;
@@ -11,7 +9,7 @@ interface FetchRankResult {
 }
 
 /**
- * Fetch rank from Contexto.me API
+ * Fetch rank from Contexto.me API via our proxy
  * @param gameDay - The game day (1-1386)
  * @param word - The word to check
  * @returns Object with rank or error
@@ -24,8 +22,8 @@ export async function fetchContextoRank(
     // Normalize word
     const normalizedWord = word.toLowerCase().trim();
     
-    // Build URL
-    const url = `${CONTEXTO_API_BASE}/${gameDay}/${encodeURIComponent(normalizedWord)}`;
+    // Use our API proxy to avoid CORS issues
+    const url = `/api/contexto/${gameDay}/${encodeURIComponent(normalizedWord)}`;
     
     const response = await fetch(url);
     
@@ -72,4 +70,3 @@ export function useContextoAPI() {
     fetchRank: fetchContextoRank,
   };
 }
-
