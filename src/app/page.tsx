@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Sparkles, Users, Zap } from "lucide-react";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 export default function LobbyPage() {
   const router = useRouter();
@@ -112,6 +113,9 @@ export default function LobbyPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Welcome Modal (PoC info) */}
+      <WelcomeModal />
+
       {/* Background decoration */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
