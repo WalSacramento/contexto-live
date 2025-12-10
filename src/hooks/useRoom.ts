@@ -144,6 +144,8 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           if (newGuess.user_id !== userId) {
             if (newGuess.rank === 1 || newGuess.rank === 0) {
               toast.success(`${guessWithNickname.nickname} venceu!`);
+              // Fetch room details to get winner info
+              setTimeout(() => fetchRoomDetails(), 500);
             } else if (newGuess.rank <= 10) {
               toast.info(`${guessWithNickname.nickname} está muito quente! (#${newGuess.rank})`);
             }
@@ -192,7 +194,10 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
         (payload) => {
           console.log("[Realtime] Room updated:", payload);
           const updatedRoom = payload.new as Room;
-          const oldRoom = payload.old as Room;
+          const previousStatus = prevRoomStatusRef.current;
+          
+          // Update the ref before setState
+          prevRoomStatusRef.current = updatedRoom.status;
           
           setState(prev => ({
             ...prev,
@@ -200,14 +205,15 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           }));
 
           // Check for game start
-          if (oldRoom?.status === "waiting" && updatedRoom.status === "playing") {
+          if (previousStatus === "waiting" && updatedRoom.status === "playing") {
             toast.success("O jogo começou!");
           }
 
-          // Check for game end
-          if (updatedRoom.status === "finished" && oldRoom?.status === "playing") {
-            // Fetch final room details to get winner info
-            fetchRoomDetails();
+          // Check for game end - use our ref instead of payload.old
+          if (updatedRoom.status === "finished" && previousStatus !== "finished") {
+            console.log("[Realtime] Game finished, fetching final details...");
+            // Fetch final room details to get winner info and secret word
+            setTimeout(() => fetchRoomDetails(), 300);
           }
         }
       );
@@ -303,6 +309,8 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
         if (response.is_winner) {
           toast.success("🏆 Você venceu! Parabéns!");
+          // Immediately fetch room details to show dashboard
+          setTimeout(() => fetchRoomDetails(), 500);
         } else if (response.revealed) {
           toast.info("⚔️ Colisão! A palavra foi revelada para todos.");
         }
@@ -328,6 +336,8 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
         if (response.is_winner) {
           toast.success("🏆 Você venceu! Parabéns!");
+          // Immediately fetch room details to show dashboard
+          setTimeout(() => fetchRoomDetails(), 500);
         } else if (response.revealed) {
           toast.info("⚔️ Colisão! A palavra foi revelada para todos.");
         }
@@ -339,7 +349,7 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
       toast.error("Erro ao enviar palpite");
       return null;
     }
-  }, [roomId, userId, state.room?.game_mode, state.room?.game_day]);
+  }, [roomId, userId, state.room?.game_mode, state.room?.game_day, fetchRoomDetails]);
 
   // Start the game
   const startGame = useCallback(async (): Promise<boolean> => {

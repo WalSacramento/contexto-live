@@ -6,6 +6,7 @@ import { RankBadge } from "./RankBadge";
 import { Guess } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getRankColor } from "@/lib/rank-utils";
+import { Clock } from "lucide-react";
 
 interface MyGuessesProps {
   guesses: Guess[];
@@ -13,12 +14,20 @@ interface MyGuessesProps {
 }
 
 export function MyGuesses({ guesses, className }: MyGuessesProps) {
-  // Sort by rank (best first)
+  // Get the last guess (most recent by created_at)
+  const lastGuess = useMemo(() => {
+    if (guesses.length === 0) return null;
+    return [...guesses].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0];
+  }, [guesses]);
+
+  // Sort guesses by rank (best first)
   const sortedGuesses = useMemo(() => {
     return [...guesses].sort((a, b) => a.rank - b.rank);
   }, [guesses]);
 
-  if (sortedGuesses.length === 0) {
+  if (guesses.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-full text-muted-foreground text-sm", className)}>
         Seus palpites aparecerão aqui
@@ -28,35 +37,80 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
 
   return (
     <ScrollArea className={cn("h-full", className)}>
-      <div className="space-y-2 pr-4">
-        {sortedGuesses.map((guess, index) => (
-          <div
-            key={guess.id}
-            className={cn(
-              "flex items-center justify-between p-3 rounded-lg border border-border/50 transition-all",
-              index === 0 && "animate-slide-in",
-              getRankColor(guess.rank),
-              guess.rank === 1 && "animate-winner border-2"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-muted-foreground text-xs font-mono w-6">
-                {sortedGuesses.indexOf(guess) + 1}.
-              </span>
-              <span className="font-medium text-foreground capitalize">
-                {guess.word}
-              </span>
-              {guess.is_revealed && (
-                <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                  revelada
-                </span>
-              )}
+      <div className="space-y-3 pr-4">
+        {/* Last Guess - Always on top with highlight */}
+        {lastGuess && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              <span>Último palpite</span>
             </div>
-            <RankBadge rank={guess.rank} />
+            <div
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg border-2 transition-all animate-slide-in",
+                getRankColor(lastGuess.rank),
+                lastGuess.rank === 1 && "animate-winner"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-foreground capitalize text-lg">
+                  {lastGuess.word}
+                </span>
+                {lastGuess.is_revealed && (
+                  <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    revelada
+                  </span>
+                )}
+              </div>
+              <RankBadge rank={lastGuess.rank} />
+            </div>
           </div>
-        ))}
+        )}
+
+        {/* Divider */}
+        {sortedGuesses.length > 1 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+            <div className="flex-1 h-px bg-border/50" />
+            <span>Todos ({sortedGuesses.length})</span>
+            <div className="flex-1 h-px bg-border/50" />
+          </div>
+        )}
+
+        {/* All guesses sorted by rank */}
+        {sortedGuesses.length > 1 && sortedGuesses.map((guess, index) => {
+          const isLast = guess.id === lastGuess?.id;
+          
+          return (
+            <div
+              key={guess.id}
+              className={cn(
+                "flex items-center justify-between p-2.5 rounded-lg border border-border/30 transition-all",
+                getRankColor(guess.rank),
+                isLast && "ring-1 ring-primary/30",
+                guess.rank === 1 && "border-2"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-xs font-mono w-5">
+                  {index + 1}.
+                </span>
+                <span className={cn(
+                  "font-medium text-foreground capitalize text-sm",
+                  isLast && "text-primary"
+                )}>
+                  {guess.word}
+                </span>
+                {isLast && (
+                  <span className="text-[10px] text-primary bg-primary/10 px-1 py-0.5 rounded">
+                    último
+                  </span>
+                )}
+              </div>
+              <RankBadge rank={guess.rank} showEmoji={false} className="text-xs" />
+            </div>
+          );
+        })}
       </div>
     </ScrollArea>
   );
 }
-
