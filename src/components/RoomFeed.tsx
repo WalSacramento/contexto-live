@@ -6,7 +6,7 @@ import { RankBadge } from "./RankBadge";
 import { GuessWithPlayer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { maskWord, getRankTier, getRankEmoji } from "@/lib/rank-utils";
-import { Swords, Trophy, EyeOff, Crown, Medal, Award } from "lucide-react";
+import { Swords, Trophy, EyeOff, Crown, Medal, Award, Flame } from "lucide-react";
 
 interface RoomFeedProps {
   guesses: GuessWithPlayer[];
@@ -24,24 +24,17 @@ interface PlayerRanking {
 }
 
 export function RoomFeed({ guesses, currentUserId, winner, secretWord, className }: RoomFeedProps) {
-  // Sort by time (newest FIRST), but bump recently revealed collisions to top
-  const sortedGuesses = useMemo(() => {
-    const now = Date.now();
-    const COLLISION_HIGHLIGHT_DURATION = 10000; // 10 seconds to stay on top
+  // Get the best guess of the room
+  const bestGuess = useMemo(() => {
+    if (guesses.length === 0) return null;
+    return [...guesses].sort((a, b) => a.rank - b.rank)[0];
+  }, [guesses]);
 
+  // Sort by time (newest FIRST)
+  const sortedGuesses = useMemo(() => {
     return [...guesses].sort((a, b) => {
       const timeA = new Date(a.created_at).getTime();
       const timeB = new Date(b.created_at).getTime();
-      
-      // Check if collision is recent (within highlight duration)
-      const aIsRecentCollision = a.is_revealed && (now - timeA) < COLLISION_HIGHLIGHT_DURATION;
-      const bIsRecentCollision = b.is_revealed && (now - timeB) < COLLISION_HIGHLIGHT_DURATION;
-
-      // Recent collisions go to top
-      if (aIsRecentCollision && !bIsRecentCollision) return -1;
-      if (!aIsRecentCollision && bIsRecentCollision) return 1;
-
-      // Otherwise, sort by time (newest first)
       return timeB - timeA;
     });
   }, [guesses]);
@@ -85,14 +78,6 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
     }
   };
 
-  // Check if a guess is a recent collision (for highlighting)
-  const isRecentCollision = (guess: GuessWithPlayer) => {
-    if (!guess.is_revealed) return false;
-    const now = Date.now();
-    const guessTime = new Date(guess.created_at).getTime();
-    return (now - guessTime) < 10000; // 10 seconds
-  };
-
   return (
     <ScrollArea className={cn("h-full", className)}>
       <div className="space-y-3 pr-4">
@@ -108,6 +93,58 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                 <p className="text-sm text-muted-foreground">
                   A palavra era: <span className="font-bold text-foreground capitalize">{secretWord}</span>
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Best Guess of the Room - Fixed on top */}
+        {bestGuess && !winner && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Flame className="w-3 h-3 text-rank-hot" />
+              <span>Melhor palpite da sala</span>
+            </div>
+            <div
+              className={cn(
+                "p-3 rounded-lg border-2 transition-all",
+                bestGuess.is_revealed 
+                  ? "border-chart-1/50 bg-chart-1/10" 
+                  : "border-rank-hot/50 bg-rank-hot/10"
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      bestGuess.user_id === currentUserId ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {bestGuess.user_id === currentUserId ? "Você" : bestGuess.nickname}
+                    </span>
+                    {bestGuess.is_revealed && (
+                      <span className="flex items-center gap-1 text-xs text-chart-1 bg-chart-1/20 px-1.5 py-0.5 rounded">
+                        <Swords className="w-3 h-3" />
+                        revelada!
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {bestGuess.user_id === currentUserId || bestGuess.is_revealed ? (
+                      <span className={cn(
+                        "font-bold capitalize text-lg",
+                        bestGuess.is_revealed ? "text-chart-1" : "text-rank-hot"
+                      )}>
+                        {bestGuess.word}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-muted-foreground tracking-wider text-lg">
+                        {maskWord(bestGuess.word)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <RankBadge rank={bestGuess.rank} showEmoji />
               </div>
             </div>
           </div>
@@ -166,7 +203,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
         )}
 
         {/* Divider */}
-        {playerRankings.length > 0 && sortedGuesses.length > 0 && !winner && (
+        {sortedGuesses.length > 0 && !winner && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <div className="flex-1 h-px bg-border/50" />
             <span>Últimos palpites</span>
@@ -185,7 +222,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
           const showWord = isMe || guess.is_revealed;
           const tier = getRankTier(guess.rank);
           const isHot = tier === "hot" || tier === "winner";
-          const recentCollision = isRecentCollision(guess);
+          const isBestGuess = bestGuess && guess.id === bestGuess.id;
           
           return (
             <div
@@ -197,23 +234,15 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                 "border-border/30",
                 // My guesses
                 isMe && "bg-primary/5 border-primary/20",
-                // Revealed (collision) - subtle highlight
-                guess.is_revealed && !recentCollision && "border-chart-1/20 bg-chart-1/5",
-                // Recent collision - strong highlight
-                recentCollision && "border-2 border-chart-1/50 bg-chart-1/15 shadow-lg shadow-chart-1/10"
+                // Revealed (collision)
+                guess.is_revealed && "border-chart-1/20 bg-chart-1/5",
+                // Best guess indicator
+                isBestGuess && "ring-1 ring-rank-hot/30"
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    {/* Collision indicator for recent collisions */}
-                    {recentCollision && (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-chart-1 bg-chart-1/20 px-1.5 py-0.5 rounded">
-                        <Swords className="w-3 h-3" />
-                        COLISÃO!
-                      </span>
-                    )}
-                    
                     {/* Player indicator */}
                     <span className={cn(
                       "text-sm font-medium truncate",
@@ -222,16 +251,24 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                       {isMe ? "Você" : guess.nickname}
                     </span>
                     
-                    {/* Revealed/Hidden indicator (only for non-recent collisions) */}
-                    {!isMe && !recentCollision && (
-                      guess.is_revealed ? (
-                        <span className="flex items-center gap-1 text-xs text-chart-1">
-                          <Swords className="w-3 h-3" />
-                          colisão
-                        </span>
-                      ) : (
-                        <EyeOff className="w-3 h-3 text-muted-foreground/50" />
-                      )
+                    {/* Best guess badge */}
+                    {isBestGuess && (
+                      <span className="text-[10px] text-rank-hot bg-rank-hot/10 px-1 py-0.5 rounded">
+                        melhor
+                      </span>
+                    )}
+                    
+                    {/* Collision indicator */}
+                    {guess.is_revealed && (
+                      <span className="flex items-center gap-1 text-xs text-chart-1">
+                        <Swords className="w-3 h-3" />
+                        colisão
+                      </span>
+                    )}
+                    
+                    {/* Hidden indicator */}
+                    {!isMe && !guess.is_revealed && (
+                      <EyeOff className="w-3 h-3 text-muted-foreground/50" />
                     )}
                   </div>
                   
@@ -240,8 +277,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
                     {showWord ? (
                       <span className={cn(
                         "font-medium capitalize",
-                        recentCollision && "text-lg font-bold text-chart-1",
-                        guess.is_revealed && !recentCollision && "text-chart-1"
+                        guess.is_revealed && "text-chart-1"
                       )}>
                         {guess.word}
                       </span>
