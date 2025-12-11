@@ -35,6 +35,9 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
   const prevRoomStatusRef = useRef<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  // Cache de players (userId -> nickname) para evitar N+1 queries
+  const playersMapRef = useRef<Map<string, string>>(new Map());
+
   // Fetch room details
   const fetchRoomDetails = useCallback(async () => {
     const supabase = getSupabase();
@@ -59,6 +62,13 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
       // Update prev status ref
       prevRoomStatusRef.current = roomData.room?.status || null;
+
+      // Atualizar cache de players (evita N+1 queries no realtime)
+      const playersMap = new Map<string, string>();
+      (roomData.players || []).forEach(player => {
+        playersMap.set(player.user_id, player.nickname);
+      });
+      playersMapRef.current = playersMap;
 
       setState({
         room: roomData.room,
@@ -106,20 +116,14 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          console.log("[Realtime] New guess received:", payload);
           const newGuess = payload.new as GuessWithPlayer;
-          
-          // Fetch the player nickname for this guess
-          const { data: playerData } = await supabase
-            .from("room_players")
-            .select("nickname")
-            .eq("room_id", roomId)
-            .eq("user_id", newGuess.user_id)
-            .single();
+
+          // Usar cache de players em vez de fazer query (evita N+1)
+          const nickname = playersMapRef.current.get(newGuess.user_id) || "Jogador";
 
           const guessWithNickname: GuessWithPlayer = {
             ...newGuess,
-            nickname: playerData?.nickname || "Jogador",
+            nickname,
           };
 
           setState(prev => {
@@ -162,7 +166,6 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          console.log("[Realtime] Guess updated:", payload);
           const updatedGuess = payload.new as GuessWithPlayer;
           
           setState(prev => ({
@@ -191,7 +194,6 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           filter: `id=eq.${roomId}`,
         },
         (payload) => {
-          console.log("[Realtime] Room updated:", payload);
           const updatedRoom = payload.new as Room;
           const previousStatus = prevRoomStatusRef.current;
           
@@ -210,7 +212,6 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
           // Check for game end - use our ref instead of payload.old
           if (updatedRoom.status === "finished" && previousStatus !== "finished") {
-            console.log("[Realtime] Game finished, fetching final details...");
             // Fetch final room details to get winner info and secret word
             setTimeout(() => fetchRoomDetails(), 300);
           }
@@ -227,9 +228,11 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          console.log("[Realtime] New player:", payload);
           const newPlayer = payload.new as RoomPlayer;
-          
+
+          // Atualizar cache de players (para futuros palpites deste player)
+          playersMapRef.current.set(newPlayer.user_id, newPlayer.nickname);
+
           setState(prev => {
             // Check if player already exists (avoid duplicates)
             if (prev.players.some(p => p.user_id === newPlayer.user_id)) {
@@ -250,10 +253,7 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
 
       // Subscribe to the channel
       channel.subscribe((status) => {
-        console.log(`[Realtime] Channel status: ${status}`);
-        if (status === "SUBSCRIBED") {
-          console.log("[Realtime] Successfully subscribed to room:", roomId);
-        } else if (status === "CHANNEL_ERROR") {
+        if (status === "CHANNEL_ERROR") {
           console.error("[Realtime] Channel error for room:", roomId);
           toast.error("Erro na conexão em tempo real. Atualize a página.");
         }
@@ -265,7 +265,6 @@ export function useRoom(roomId: string, userId: string): UseRoomReturn {
     setupRealtimeSubscription();
 
     return () => {
-      console.log("[Realtime] Cleaning up channel for room:", roomId);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
