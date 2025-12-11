@@ -69,6 +69,13 @@ export interface StartGameResponse {
   game_mode?: GameMode;
 }
 
+export interface CreateRematchResponse {
+  success?: boolean;
+  error?: string;
+  room_id?: string;
+  game_mode?: GameMode;
+}
+
 // Player Context
 export interface Player {
   id: string;

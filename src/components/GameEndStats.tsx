@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GuessWithPlayer, RoomPlayer } from "@/lib/types";
@@ -17,15 +17,20 @@ import {
   Award,
   Flame,
   Home,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
 interface GameEndStatsProps {
+  roomId: string;
   winner: { id: string; nickname: string };
   secretWord: string;
   guesses: GuessWithPlayer[];
   players: RoomPlayer[];
   currentUserId: string;
+  isHost: boolean;
+  onRematch: () => Promise<void>;
 }
 
 interface PlayerStats {
@@ -39,12 +44,17 @@ interface PlayerStats {
 }
 
 export function GameEndStats({
+  roomId,
   winner,
   secretWord,
   guesses,
   players,
   currentUserId,
+  isHost,
+  onRematch,
 }: GameEndStatsProps) {
+  const [isCreatingRematch, setIsCreatingRematch] = useState(false);
+
   // Calculate player statistics
   const playerStats = useMemo((): PlayerStats[] => {
     const statsMap = new Map<string, PlayerStats>();
@@ -123,6 +133,15 @@ export function GameEndStats({
   const isMe = (userId: string) => userId === currentUserId;
   const formatName = (userId: string, nickname: string) =>
     isMe(userId) ? "Você" : nickname;
+
+  const handleRematch = async () => {
+    setIsCreatingRematch(true);
+    try {
+      await onRematch();
+    } finally {
+      setIsCreatingRematch(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -406,9 +425,33 @@ export function GameEndStats({
         </CardContent>
       </Card>
 
-      {/* Back to Lobby */}
-      <div className="flex justify-center pt-4">
-        <Button asChild size="lg" className="gap-2">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4 pt-4">
+        {/* Rematch Button (only for host) */}
+        {isHost && (
+          <Button
+            onClick={handleRematch}
+            disabled={isCreatingRematch}
+            size="lg"
+            className="gap-2"
+            variant="default"
+          >
+            {isCreatingRematch ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Criando sala...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                Jogar Novamente
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Back to Lobby Button */}
+        <Button asChild size="lg" className="gap-2" variant="outline">
           <Link href="/">
             <Home className="w-4 h-4" />
             Voltar ao Lobby

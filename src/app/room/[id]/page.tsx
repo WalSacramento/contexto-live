@@ -12,6 +12,7 @@ import { GameEndStats } from "@/components/GameEndStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Target, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 export default function RoomPage() {
@@ -90,6 +91,49 @@ export default function RoomPage() {
   // Game finished - show stats
   const isGameFinished = room.status === "finished" && winner && secretWord;
 
+  // Handle rematch creation
+  const handleRematch = async () => {
+    if (!player?.id || !isHost) {
+      toast.error("Apenas o host pode criar rematch");
+      return;
+    }
+
+    try {
+      // Call rematch API
+      const response = await fetch("/api/rematch/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          roomId,
+          userId: player.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erro ao criar rematch");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      // Redirect to new room
+      toast.success("Nova sala criada! Redirecionando...");
+      router.push(`/room/${data.room_id}`);
+
+    } catch (error) {
+      console.error("Error creating rematch:", error);
+      toast.error("Erro ao criar rematch");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Background decoration */}
@@ -132,11 +176,14 @@ export default function RoomPage() {
         {isGameFinished ? (
           <div className="max-w-3xl mx-auto">
             <GameEndStats
+              roomId={roomId}
               winner={winner}
               secretWord={secretWord}
               guesses={guesses}
               players={players}
               currentUserId={player?.id || ""}
+              isHost={isHost}
+              onRematch={handleRematch}
             />
           </div>
         ) : room.status === "waiting" ? (
