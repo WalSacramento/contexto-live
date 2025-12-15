@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlayer } from "./providers";
 import { getSupabase } from "@/lib/supabase";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Sparkles, Users, Zap } from "lucide-react";
+import { Sparkles, Users, Zap, Trophy, TrendingUp } from "lucide-react";
 import { WelcomeModal } from "@/components/WelcomeModal";
 import { GameModeSelector } from "@/components/GameModeSelector";
 
@@ -23,6 +23,15 @@ export default function LobbyPage() {
   const [isJoining, setIsJoining] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
+  const [stats, setStats] = useState<{ totalRooms: number; totalPlayers: number } | null>(null);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch((err) => console.error("Error fetching stats:", err));
+  }, []);
 
   if (!isReady) {
     return (
@@ -149,6 +158,17 @@ export default function LobbyPage() {
           <p className="text-muted-foreground">
             Descubra a palavra secreta através da proximidade semântica
           </p>
+
+          {/* Stats */}
+          {stats && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-chart-1/10 border border-primary/20">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">
+                Junte-se a <strong className="text-primary">{stats.totalPlayers.toLocaleString()}</strong> jogadores em{" "}
+                <strong className="text-chart-1">{stats.totalRooms.toLocaleString()}</strong> partidas!
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Main Card */}
