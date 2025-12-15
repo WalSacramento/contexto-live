@@ -366,20 +366,20 @@ export default function RoomPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-4 pt-4 min-h-0">
-                {/* My guesses list - scroll acima do input no mobile */}
-                <div className="flex-1 min-h-0 order-2 md:order-1">
-                  <MyGuesses guesses={myGuesses} />
-                </div>
-
-                {/* Guess input - fixo embaixo no mobile */}
+                {/* Guess input - em cima no desktop, embaixo no mobile */}
                 {room.status === "playing" && (
-                  <div className="order-1 md:order-2">
+                  <div className="order-2 md:order-1">
                     <GuessInput
                       onSubmit={submitGuess}
                       disabled={room.status !== "playing"}
                     />
                   </div>
                 )}
+
+                {/* My guesses list - scroll */}
+                <div className="flex-1 min-h-0 order-1 md:order-2">
+                  <MyGuesses guesses={myGuesses} />
+                </div>
               </CardContent>
             </Card>
 

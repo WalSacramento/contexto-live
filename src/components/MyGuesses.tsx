@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { RankBadge } from "./RankBadge";
@@ -15,8 +15,21 @@ interface MyGuessesProps {
 }
 
 export function MyGuesses({ guesses, className }: MyGuessesProps) {
-  const INITIAL_MOBILE_LIMIT = 10;
   const [showAll, setShowAll] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const INITIAL_LIMIT = isMobile ? 2 : 10;
 
   // Get the last guess (most recent by created_at)
   const lastGuess = useMemo(() => {
@@ -31,14 +44,14 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
     return [...guesses].sort((a, b) => a.rank - b.rank);
   }, [guesses]);
 
-  // Limit guesses on mobile unless "showAll" is true
+  // Limit guesses unless "showAll" is true
   const displayedGuesses = useMemo(() => {
     if (sortedGuesses.length <= 1) return sortedGuesses;
     if (showAll) return sortedGuesses;
-    return sortedGuesses.slice(0, INITIAL_MOBILE_LIMIT);
-  }, [sortedGuesses, showAll]);
+    return sortedGuesses.slice(0, INITIAL_LIMIT);
+  }, [sortedGuesses, showAll, INITIAL_LIMIT]);
 
-  const hasMore = sortedGuesses.length > INITIAL_MOBILE_LIMIT && !showAll;
+  const hasMore = sortedGuesses.length > INITIAL_LIMIT && !showAll;
 
   if (guesses.length === 0) {
     return (
@@ -133,7 +146,7 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
             className="w-full mt-2 text-xs"
           >
             <ChevronDown className="w-3 h-3 mr-1" />
-            Ver mais ({sortedGuesses.length - INITIAL_MOBILE_LIMIT} palpites)
+            Ver mais ({sortedGuesses.length - INITIAL_LIMIT} palpites)
           </Button>
         )}
       </div>
