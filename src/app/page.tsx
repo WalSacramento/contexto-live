@@ -201,22 +201,22 @@ export default function LobbyPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Entrar em uma Sala</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-lg sm:text-xl">Entrar em uma Sala</DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm">
                       Digite o código da sala que você recebeu
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 pt-4">
+                  <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
                     <Input
                       placeholder="Cole o código da sala aqui"
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
-                      className="font-mono text-center"
+                      className="font-mono text-center text-sm sm:text-base"
                     />
                     <Button
                       onClick={handleJoinRoom}
                       disabled={isJoining || !roomCode.trim()}
-                      className="w-full"
+                      className="w-full text-sm sm:text-base h-10 sm:h-11"
                     >
                       {isJoining ? "Entrando..." : "Entrar na Sala"}
                     </Button>

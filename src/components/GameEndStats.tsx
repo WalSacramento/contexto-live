@@ -144,23 +144,23 @@ export function GameEndStats({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Winner Banner */}
       <Card className="overflow-hidden border-green-500/30 bg-gradient-to-br from-green-500/5 via-background to-emerald-500/5">
-        <CardContent className="pt-8 pb-8">
-          <div className="text-center space-y-6">
+        <CardContent className="pt-6 pb-6 sm:pt-8 sm:pb-8 px-4 sm:px-6">
+          <div className="text-center space-y-4 sm:space-y-6">
             {/* Trophy */}
             <div className="inline-block">
-              <Trophy className="w-16 h-16 text-yellow-500" />
+              <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-500" />
             </div>
 
             {/* Winner Name */}
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">
                 Vencedor
               </p>
               <h2 className={cn(
-                "text-3xl font-bold",
+                "text-2xl sm:text-3xl font-bold",
                 isMe(winner.id) ? "text-green-400" : "text-foreground"
               )}>
                 {isMe(winner.id) ? "🎉 Você venceu!" : `${winner.nickname}`}
@@ -168,12 +168,12 @@ export function GameEndStats({
             </div>
 
             {/* Secret Word */}
-            <div className="pt-4 space-y-3">
-              <p className="text-sm text-muted-foreground">A palavra secreta era:</p>
+            <div className="pt-2 sm:pt-4 space-y-2 sm:space-y-3">
+              <p className="text-xs sm:text-sm text-muted-foreground">A palavra secreta era:</p>
               
               {/* Word container */}
-              <div className="inline-block px-8 py-4 bg-green-500/10 rounded-xl border border-green-500/30">
-                <span className="text-3xl md:text-4xl font-bold uppercase tracking-wide text-green-400">
+              <div className="inline-block px-4 py-3 sm:px-8 sm:py-4 bg-green-500/10 rounded-xl border border-green-500/30">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-wide text-green-400 break-all">
                   {secretWord}
                 </span>
               </div>
@@ -184,33 +184,33 @@ export function GameEndStats({
 
       {/* Stats Grid */}
       {achievements && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           {/* Total Guesses */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4 text-center">
-              <MessageSquare className="w-6 h-6 mx-auto text-primary mb-2" />
-              <p className="text-2xl font-bold">{achievements.totalGuesses}</p>
-              <p className="text-xs text-muted-foreground">Palpites totais</p>
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-2 sm:px-4 text-center">
+              <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-primary mb-1 sm:mb-2" />
+              <p className="text-xl sm:text-2xl font-bold">{achievements.totalGuesses}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Palpites totais</p>
             </CardContent>
           </Card>
 
           {/* Total Collisions */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4 text-center">
-              <Swords className="w-6 h-6 mx-auto text-chart-1 mb-2" />
-              <p className="text-2xl font-bold">{achievements.totalCollisions}</p>
-              <p className="text-xs text-muted-foreground">Colisões</p>
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-2 sm:px-4 text-center">
+              <Swords className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-chart-1 mb-1 sm:mb-2" />
+              <p className="text-xl sm:text-2xl font-bold">{achievements.totalCollisions}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Colisões</p>
             </CardContent>
           </Card>
 
           {/* Most Accurate Average */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4 text-center">
-              <Target className="w-6 h-6 mx-auto text-rank-hot mb-2" />
-              <p className="text-2xl font-bold">#{Math.round(achievements.bestAverage.avgRank)}</p>
-              <p className="text-xs text-muted-foreground">Melhor média</p>
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-2 sm:px-4 text-center">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-rank-hot mb-1 sm:mb-2" />
+              <p className="text-xl sm:text-2xl font-bold">#{Math.round(achievements.bestAverage.avgRank)}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Melhor média</p>
               <p className={cn(
-                "text-xs font-medium mt-1",
+                "text-[10px] sm:text-xs font-medium mt-1 truncate",
                 isMe(achievements.bestAverage.userId) && "text-primary"
               )}>
                 {formatName(achievements.bestAverage.userId, achievements.bestAverage.nickname)}
@@ -220,12 +220,12 @@ export function GameEndStats({
 
           {/* Started Hottest */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4 text-center">
-              <Flame className="w-6 h-6 mx-auto text-orange-500 mb-2" />
-              <p className="text-2xl font-bold">#{achievements.bestFirstGuess.firstGuessRank}</p>
-              <p className="text-xs text-muted-foreground">Melhor 1º chute</p>
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-2 sm:px-4 text-center">
+              <Flame className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-orange-500 mb-1 sm:mb-2" />
+              <p className="text-xl sm:text-2xl font-bold">#{achievements.bestFirstGuess.firstGuessRank}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Melhor 1º chute</p>
               <p className={cn(
-                "text-xs font-medium mt-1",
+                "text-[10px] sm:text-xs font-medium mt-1 truncate",
                 isMe(achievements.bestFirstGuess.userId) && "text-primary"
               )}>
                 {formatName(achievements.bestFirstGuess.userId, achievements.bestFirstGuess.nickname)}
@@ -237,28 +237,28 @@ export function GameEndStats({
 
       {/* Player Achievements */}
       {achievements && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
           {/* Most Persistent */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-purple-500/20">
-                  <Zap className="w-5 h-5 text-purple-500" />
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-3 sm:px-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-purple-500/20 shrink-0">
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Mais Persistente</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs sm:text-sm font-semibold">Mais Persistente</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Quem mais chutou palavras
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className={cn(
-                    "font-bold",
+                    "text-xs sm:text-sm font-bold truncate max-w-[80px] sm:max-w-none",
                     isMe(achievements.mostGuesses.userId) && "text-primary"
                   )}>
                     {formatName(achievements.mostGuesses.userId, achievements.mostGuesses.nickname)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {achievements.mostGuesses.totalGuesses} palpites
                   </p>
                 </div>
@@ -268,25 +268,25 @@ export function GameEndStats({
 
           {/* Most Accurate */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-rank-hot/20">
-                  <TrendingUp className="w-5 h-5 text-rank-hot" />
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-3 sm:px-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-rank-hot/20 shrink-0">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-rank-hot" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Mais Assertivo</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs sm:text-sm font-semibold">Mais Assertivo</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Melhor média de ranking
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className={cn(
-                    "font-bold",
+                    "text-xs sm:text-sm font-bold truncate max-w-[80px] sm:max-w-none",
                     isMe(achievements.bestAverage.userId) && "text-primary"
                   )}>
                     {formatName(achievements.bestAverage.userId, achievements.bestAverage.nickname)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     média #{Math.round(achievements.bestAverage.avgRank)}
                   </p>
                 </div>
@@ -296,25 +296,25 @@ export function GameEndStats({
 
           {/* Best First Guess */}
           <Card className="border-border/50 bg-card/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-orange-500/20">
-                  <Flame className="w-5 h-5 text-orange-500" />
+            <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-3 sm:px-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-orange-500/20 shrink-0">
+                  <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Começou Quente</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs sm:text-sm font-semibold">Começou Quente</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Melhor primeiro palpite
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className={cn(
-                    "font-bold",
+                    "text-xs sm:text-sm font-bold truncate max-w-[80px] sm:max-w-none",
                     isMe(achievements.bestFirstGuess.userId) && "text-primary"
                   )}>
                     {formatName(achievements.bestFirstGuess.userId, achievements.bestFirstGuess.nickname)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     #{achievements.bestFirstGuess.firstGuessRank} {getRankEmoji(achievements.bestFirstGuess.firstGuessRank)}
                   </p>
                 </div>
@@ -325,25 +325,25 @@ export function GameEndStats({
           {/* Most Collisions */}
           {achievements.mostCollisions && (
             <Card className="border-border/50 bg-card/50">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-chart-1/20">
-                    <Swords className="w-5 h-5 text-chart-1" />
+              <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-3 sm:px-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-full bg-chart-1/20 shrink-0">
+                    <Swords className="w-4 h-4 sm:w-5 sm:h-5 text-chart-1" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Mais Colisões</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs sm:text-sm font-semibold">Mais Colisões</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Pensou igual aos outros
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className={cn(
-                      "font-bold",
+                      "text-xs sm:text-sm font-bold truncate max-w-[80px] sm:max-w-none",
                       isMe(achievements.mostCollisions.userId) && "text-primary"
                     )}>
                       {formatName(achievements.mostCollisions.userId, achievements.mostCollisions.nickname)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       {achievements.mostCollisions.collisions} colisões
                     </p>
                   </div>
@@ -356,12 +356,12 @@ export function GameEndStats({
 
       {/* Player Ranking */}
       <Card className="border-border/50 bg-card/50">
-        <CardContent className="pt-4 pb-4">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Medal className="w-4 h-4 text-yellow-500" />
+        <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4 px-3 sm:px-4">
+          <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+            <Medal className="w-4 h-4 text-yellow-500 shrink-0" />
             Classificação Final
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             {[...playerStats]
               .sort((a, b) => a.bestRank - b.bestRank)
               .map((player, index) => {
@@ -372,43 +372,43 @@ export function GameEndStats({
                   <div
                     key={player.userId}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg transition-all",
+                      "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all",
                       isWinner && "bg-rank-winner/10 border border-rank-winner/30",
                       isMe(player.userId) && !isWinner && "bg-primary/10 border border-primary/20"
                     )}
                   >
                     {/* Position */}
-                    <div className="w-8 text-center">
+                    <div className="w-6 sm:w-8 text-center shrink-0">
                       {index === 0 ? (
-                        <Trophy className="w-5 h-5 text-yellow-500 mx-auto" />
+                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 mx-auto" />
                       ) : index === 1 ? (
-                        <Medal className="w-5 h-5 text-gray-400 mx-auto" />
+                        <Medal className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mx-auto" />
                       ) : index === 2 ? (
-                        <Award className="w-5 h-5 text-amber-600 mx-auto" />
+                        <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mx-auto" />
                       ) : (
-                        <span className="text-sm text-muted-foreground">{index + 1}º</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">{index + 1}º</span>
                       )}
                     </div>
 
                     {/* Player info */}
                     <div className="flex-1 min-w-0">
                       <p className={cn(
-                        "font-medium truncate",
+                        "text-xs sm:text-sm font-medium truncate",
                         isMe(player.userId) && "text-primary",
                         isWinner && "text-rank-winner"
                       )}>
                         {formatName(player.userId, player.nickname)}
                         {isWinner && " 🏆"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
                         {player.totalGuesses} palpites • média #{Math.round(player.avgRank)}
                       </p>
                     </div>
 
                     {/* Best rank */}
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className={cn(
-                        "font-mono font-bold",
+                        "text-sm sm:text-base font-mono font-bold",
                         tier === "winner" && "text-rank-winner",
                         tier === "hot" && "text-rank-hot",
                         tier === "warm" && "text-rank-warm",
@@ -416,7 +416,7 @@ export function GameEndStats({
                       )}>
                         #{player.bestRank}
                       </p>
-                      <p className="text-xs text-muted-foreground">melhor</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">melhor</p>
                     </div>
                   </div>
                 );
