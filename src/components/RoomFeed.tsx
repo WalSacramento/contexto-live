@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { RankBadge } from "./RankBadge";
 import { GuessWithPlayer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { maskWord, getRankTier, getRankEmoji } from "@/lib/rank-utils";
-import { Swords, Trophy, EyeOff, Crown, Medal, Award, Flame } from "lucide-react";
+import { Swords, Trophy, EyeOff, Crown, Medal, Award, Flame, ChevronDown } from "lucide-react";
 
 interface RoomFeedProps {
   guesses: GuessWithPlayer[];
@@ -24,6 +25,9 @@ interface PlayerRanking {
 }
 
 export function RoomFeed({ guesses, currentUserId, winner, secretWord, className }: RoomFeedProps) {
+  const INITIAL_MOBILE_LIMIT = 5;
+  const [showAll, setShowAll] = useState(false);
+
   // Get the best guess of the room
   const bestGuess = useMemo(() => {
     if (guesses.length === 0) return null;
@@ -38,6 +42,14 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
       return timeB - timeA;
     });
   }, [guesses]);
+
+  // Limit guesses on mobile unless "showAll" is true
+  const displayedGuesses = useMemo(() => {
+    if (showAll) return sortedGuesses;
+    return sortedGuesses.slice(0, INITIAL_MOBILE_LIMIT);
+  }, [sortedGuesses, showAll]);
+
+  const hasMore = sortedGuesses.length > INITIAL_MOBILE_LIMIT && !showAll;
 
   // Calculate player rankings (best rank per player)
   const playerRankings = useMemo((): PlayerRanking[] => {
@@ -79,7 +91,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
   };
 
   return (
-    <ScrollArea className={cn("h-full", className)}>
+    <ScrollArea className={cn("h-full overscroll-contain", className)}>
       <div className="space-y-3 pr-4">
         {/* Winner announcement */}
         {winner && secretWord && (
@@ -217,7 +229,7 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
           </div>
         )}
 
-        {sortedGuesses.map((guess, index) => {
+        {displayedGuesses.map((guess, index) => {
           const isMe = guess.user_id === currentUserId;
           const showWord = isMe || guess.is_revealed;
           const tier = getRankTier(guess.rank);
@@ -304,6 +316,19 @@ export function RoomFeed({ guesses, currentUserId, winner, secretWord, className
             </div>
           );
         })}
+
+        {/* Ver mais button */}
+        {hasMore && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll(true)}
+            className="w-full mt-2 text-xs"
+          >
+            <ChevronDown className="w-3 h-3 mr-1" />
+            Ver mais ({sortedGuesses.length - INITIAL_MOBILE_LIMIT} palpites)
+          </Button>
+        )}
       </div>
     </ScrollArea>
   );

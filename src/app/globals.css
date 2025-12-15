@@ -187,3 +187,31 @@
 .animate-winner {
   animation: winnerPulse 1.5s ease-in-out infinite;
 }
+
+/* Dynamic viewport height - suporta teclado mobile */
+@supports (height: 100dvh) {
+  .h-dvh {
+    height: 100dvh;
+  }
+}
+
+/* Fallback para navegadores antigos */
+@supports not (height: 100dvh) {
+  .h-dvh {
+    height: 100vh;
+  }
+}
+
+/* Otimizações mobile */
+@media (max-width: 768px) {
+  /* Scroll suave para melhor UX com teclado */
+  .scroll-area-viewport {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Prevenir zoom ao focar input no iOS */
+  input[type="text"] {
+    font-size: 16px !important; /* iOS não zoom se >= 16px */
+  }
+}

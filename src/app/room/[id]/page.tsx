@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePlayer } from "@/app/providers";
 import { useRoom } from "@/hooks/useRoom";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { GuessInput } from "@/components/GuessInput";
 import { MyGuesses } from "@/components/MyGuesses";
 import { RoomFeed } from "@/components/RoomFeed";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Target, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function RoomPage() {
   const params = useParams();
@@ -31,6 +33,9 @@ export default function RoomPage() {
     submitGuess,
     startGame,
   } = useRoom(roomId, player?.id || "");
+
+  // Detect mobile keyboard visibility
+  const { isKeyboardVisible } = useKeyboardVisible();
 
   // Redirect to home if no player
   useEffect(() => {
@@ -143,7 +148,10 @@ export default function RoomPage() {
       </div>
 
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className={cn(
+        "border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10",
+        isKeyboardVisible && "max-md:hidden"
+      )}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -203,9 +211,14 @@ export default function RoomPage() {
           </div>
         ) : (
           // Game arena
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-220px)]">
+          <div className={cn(
+            "grid gap-6 grid-cols-1 lg:grid-cols-2",
+            isKeyboardVisible
+              ? "h-[calc(100dvh-80px)] md:h-[calc(100vh-220px)]"
+              : "h-[calc(100dvh-220px)] md:h-[calc(100vh-220px)]"
+          )}>
             {/* Left column - My Panel */}
-            <Card className="flex flex-col border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card className="flex flex-col border-border/50 bg-card/50 backdrop-blur-sm order-2 lg:order-1">
               <CardHeader className="pb-3 border-b border-border/30">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary" />
@@ -218,23 +231,25 @@ export default function RoomPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-4 pt-4 min-h-0">
-                {/* Guess input */}
-                {room.status === "playing" && (
-                  <GuessInput
-                    onSubmit={submitGuess}
-                    disabled={room.status !== "playing"}
-                  />
-                )}
-                
-                {/* My guesses list */}
-                <div className="flex-1 min-h-0">
+                {/* My guesses list - scroll acima do input no mobile */}
+                <div className="flex-1 min-h-0 order-2 md:order-1">
                   <MyGuesses guesses={myGuesses} />
                 </div>
+
+                {/* Guess input - fixo embaixo no mobile */}
+                {room.status === "playing" && (
+                  <div className="order-1 md:order-2">
+                    <GuessInput
+                      onSubmit={submitGuess}
+                      disabled={room.status !== "playing"}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Right column - Room Feed */}
-            <Card className="flex flex-col border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card className="flex flex-col border-border/50 bg-card/50 backdrop-blur-sm order-1 lg:order-2">
               <CardHeader className="pb-3 border-b border-border/30">
                 <CardTitle className="text-base flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-chart-1" />

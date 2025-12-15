@@ -4,6 +4,8 @@ import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2 } from "lucide-react";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
+import { cn } from "@/lib/utils";
 
 interface GuessInputProps {
   onSubmit: (word: string) => Promise<unknown>;
@@ -14,6 +16,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
   const [word, setWord] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isKeyboardVisible } = useKeyboardVisible();
 
   // Function to focus the input
   const focusInput = useCallback(() => {
@@ -51,6 +54,17 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
     }
   }, [disabled, isSubmitting]);
 
+  // Scroll input into view when typing (mobile keyboard UX)
+  useEffect(() => {
+    if (inputRef.current && document.activeElement === inputRef.current && word) {
+      inputRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
+  }, [word]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -68,7 +82,10 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className={cn("flex gap-2", isKeyboardVisible && "md:static")}
+    >
       <Input
         ref={inputRef}
         type="text"
@@ -77,7 +94,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
         onChange={(e) => setWord(e.target.value)}
         onBlur={handleBlur}
         disabled={disabled || isSubmitting}
-        className="h-14 text-lg flex-1 bg-background/50 font-medium"
+        className="h-12 md:h-14 text-base md:text-lg flex-1 bg-background/50 font-medium"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
@@ -88,7 +105,7 @@ export function GuessInput({ onSubmit, disabled }: GuessInputProps) {
         type="submit"
         size="lg"
         disabled={disabled || isSubmitting || !word.trim()}
-        className="h-14 px-6"
+        className="h-12 md:h-14 px-4 md:px-6"
       >
         {isSubmitting ? (
           <Loader2 className="w-5 h-5 animate-spin" />

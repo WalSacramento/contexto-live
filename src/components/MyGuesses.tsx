@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { RankBadge } from "./RankBadge";
 import { Guess } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getRankColor } from "@/lib/rank-utils";
-import { Clock } from "lucide-react";
+import { Clock, ChevronDown } from "lucide-react";
 
 interface MyGuessesProps {
   guesses: Guess[];
@@ -14,6 +15,9 @@ interface MyGuessesProps {
 }
 
 export function MyGuesses({ guesses, className }: MyGuessesProps) {
+  const INITIAL_MOBILE_LIMIT = 10;
+  const [showAll, setShowAll] = useState(false);
+
   // Get the last guess (most recent by created_at)
   const lastGuess = useMemo(() => {
     if (guesses.length === 0) return null;
@@ -27,6 +31,15 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
     return [...guesses].sort((a, b) => a.rank - b.rank);
   }, [guesses]);
 
+  // Limit guesses on mobile unless "showAll" is true
+  const displayedGuesses = useMemo(() => {
+    if (sortedGuesses.length <= 1) return sortedGuesses;
+    if (showAll) return sortedGuesses;
+    return sortedGuesses.slice(0, INITIAL_MOBILE_LIMIT);
+  }, [sortedGuesses, showAll]);
+
+  const hasMore = sortedGuesses.length > INITIAL_MOBILE_LIMIT && !showAll;
+
   if (guesses.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-full text-muted-foreground text-sm", className)}>
@@ -36,7 +49,7 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
   }
 
   return (
-    <ScrollArea className={cn("h-full", className)}>
+    <ScrollArea className={cn("h-full overscroll-contain", className)}>
       <div className="space-y-3 pr-4">
         {/* Last Guess - Always on top with highlight */}
         {lastGuess && (
@@ -77,7 +90,7 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
         )}
 
         {/* All guesses sorted by rank */}
-        {sortedGuesses.length > 1 && sortedGuesses.map((guess, index) => {
+        {displayedGuesses.length > 1 && displayedGuesses.map((guess, index) => {
           const isLast = guess.id === lastGuess?.id;
           
           return (
@@ -110,6 +123,19 @@ export function MyGuesses({ guesses, className }: MyGuessesProps) {
             </div>
           );
         })}
+
+        {/* Ver mais button */}
+        {hasMore && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll(true)}
+            className="w-full mt-2 text-xs"
+          >
+            <ChevronDown className="w-3 h-3 mr-1" />
+            Ver mais ({sortedGuesses.length - INITIAL_MOBILE_LIMIT} palpites)
+          </Button>
+        )}
       </div>
     </ScrollArea>
   );
