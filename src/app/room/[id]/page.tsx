@@ -154,7 +154,7 @@ export default function RoomPage() {
               Contexto <span className="text-chart-1">Live</span>
             </h1>
             <div className="text-sm text-muted-foreground">
-              {player?.nickname}
+              {player?.nickname?.slice(0, 20)}
             </div>
           </div>
           
